@@ -8,6 +8,7 @@ import sklearn
 from sklearn.model_selection import BayesSearchCV
 import numpy         as np 
 from typing import Tuple
+from skopt.space import Real, Categorical, Integer
     
 
 version = 1
