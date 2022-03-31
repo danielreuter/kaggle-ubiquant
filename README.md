@@ -4,9 +4,9 @@
 
 1) Exploratory data analysis and discussion of results are all in:  https://www.kaggle.com/code/danielreuter/ubiquant-competition-eda
 
-2) LGBM and DNN models are run on a Google Cloud Compute Engine, code is ubi_lgbm.py and ubi_pytorch.py
+2) LGBM and DNN models are run on a Google Cloud Compute Engine, code is ubi_lgbm.py and ubi_nn.py
 
-3) Models were tuned based on performance in a 5-fold time-based cross-validation strategy, code is ubi_lgbm_tuning.py and ubi_pytorch_tuning.py
+3) Models were tuned based on performance in a 5-fold time-based cross-validation strategy, code is ubi_lgbm_tuning.py and ubi_nn_tuning.py
 
 4) Competition submission file is: https://www.kaggle.com/danielreuter/ubiquant-model-testing
 
