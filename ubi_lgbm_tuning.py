@@ -12,26 +12,22 @@ import pickle
 import numpy.ma as ma
 from sklearn.metrics import make_scorer
 import lightgbm      as lgbm
-
 import sklearn
 from sklearn.model_selection import BayesSearchCV
-
 import numpy         as np 
-
 from typing import Tuple
     
-import tensorflow as tf
-tf.random.set_seed(99)
-from keras.wrappers.scikit_learn import KerasRegressor
 
 version = 1
 n_folds = 5
+seed    = 99
 
 print('Loading data...')
 train = pd.read_pickle('~/data/raw/train.pkl')
 target   = 'target'
 features = [col for col in train if col.startswith('f_')]
 
+# Define custom cross-validation splitter
 class GroupTimeSeriesSplit:
     """
     Custom class to create a Group Time Series Split. We ensure
