@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Mar 29 17:05:40 2022
-
-@author: Daniel
-"""
-
-
 import pandas        as pd 
 import gc 
 import pickle
