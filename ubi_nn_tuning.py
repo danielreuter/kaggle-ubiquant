@@ -1,39 +1,27 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Mar 29 17:05:40 2022
-
-@author: Daniel
-"""
-
-
 import pandas        as pd 
 import gc 
 import pickle
 import numpy.ma as ma
 from sklearn.metrics import make_scorer
-
-
 import sklearn
 from sklearn.model_selection import BayesSearchCV
-
 import numpy         as np 
-
-from typing import Tuple
-    
+from typing import Tuple 
 import tensorflow as tf
 tf.random.set_seed(99)
 from keras.wrappers.scikit_learn import KerasRegressor
+from skopt.space import Real, Categorical, Integer
+
+
 
 version = 1
 n_folds = 5
+seed    = 100
 
 print('Loading data...')
 train = pd.read_pickle('~/data/raw/train.pkl')
 target   = 'target'
 features = [col for col in train if col.startswith('f_')]
-
-#"learning_rate": reciprocal(3e-4, 3e-2),
-
 
 class GroupTimeSeriesSplit:
     """
@@ -155,16 +143,16 @@ early_stopping = tf.keras.callbacks.EarlyStopping(monitor='r2_score',
 
 
 print('Running grid search...')
-bs = GridSearchCV( estimator     = KerasRegressor(build_fn = build_model), 
-                   fit_params    = {'callbacks': [early_stopping]},
-                   search_spaces = search_spaces,
-                   scoring       = scorer,
-                   n_jobs        = -1,
-                   verbose       = 1,
-                   n_iter        = 100,
-                   cv            = GroupTimeSeriesSplit(n_folds=n_folds,
-                                                        holdout_size=200, 
-                                                        groups=train['time_id']))
+bs = BayesSearchCV( estimator     = KerasRegressor(build_fn = build_model), 
+                    fit_params    = {'callbacks': [early_stopping]},
+                    search_spaces = search_spaces,
+                    scoring       = scorer,
+                    n_jobs        = -1,
+                    verbose       = 1,
+                    n_iter        = 100,
+                    cv            = GroupTimeSeriesSplit(n_folds=n_folds,
+                                                         holdout_size=200, 
+                                                         groups=train['time_id']))
 
 
 
