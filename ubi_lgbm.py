@@ -38,11 +38,6 @@ params = {'verbosity': -1,
 
 
 
-def rmse(y, x):
-    temp = y-x
-    temp = temp**2
-    return temp.sum()
-
 def run(params):    
     
     y = train['target']

@@ -5,18 +5,18 @@ import numpy.ma as ma
 from sklearn.metrics import make_scorer
 import lightgbm      as lgbm
 import sklearn
-from sklearn.model_selection import BayesSearchCV
+from skopt import BayesSearchCV
 import numpy         as np 
 from typing import Tuple
 from skopt.space import Real, Categorical, Integer
     
 
-version = 1
-n_folds = 5
+version = 4
+n_folds = 3
 seed    = 99
 
 print('Loading data...')
-train = pd.read_pickle('~/data/raw/train.pkl')
+train = pd.read_pickle('~/data/raw/train.pkl').reset_index()
 target   = 'target'
 features = [col for col in train if col.startswith('f_')]
 
@@ -65,32 +65,28 @@ class GroupTimeSeriesSplit:
             yield train_index, test_index
 
 def corr(y_true, y_pred):
-    A = y_true.numpy()
-    B = y_pred.numpy()
-    
-    return ma.corrcoef(ma.masked_invalid(A), ma.masked_invalid(B))[0][1]
+    return np.corrcoef(y_true, y_pred)[0][1]
 
 
 
-scorer = make_scorer(sklearn.metrics.r2_score)
+scorer = make_scorer(corr)
 
-early_stopping = tf.keras.callbacks.EarlyStopping(monitor='r2_score',
-                                                  patience=5,
-                                                  mode='max',
-                                                  min_delta=4e-4,
-                                                  restore_best_weights=True)
+early_stopping = lgbm.early_stopping(stopping_rounds=10)
+
+def corr_eval(y_true, y_pred):
+    return ('correlation', np.corrcoef(y_true, y_pred)[0][1], True)
 
 params = {
   'boosting_type': 'gbdt',
   'objective': 'regression',
-  'metric': 'rmse'}
+  'metrics': 'rmse'}
 
 search_spaces = dict(
     max_depth        = Integer(50, 250),
     num_leaves       = Integer(200, 400),
     n_estimators     = Integer(600, 1000),
     lambda_l1        = Real(7, 12),
-    lambda_l2        = Real(0.01, 0.05)
+    lambda_l2        = Real(0.01, 0.05),
     min_data_in_leaf = Integer(1000, 2500),
     max_bin          = Integer(100, 300),
     feature_fraction = Real(0.6, 0.9),
@@ -99,21 +95,26 @@ search_spaces = dict(
     )
 
 print('Running grid search...')
-bs = BayesSearchCV( estimator     = LGBMRegressor(**params), 
-                    fit_params    = {'callbacks': [early_stopping]},
+bs = BayesSearchCV( estimator     = lgbm.LGBMRegressor(**params), 
                     search_spaces = search_spaces,
                     scoring       = scorer,
                     n_jobs        = 2,
-                    verbose       = 1,
-                    n_iter        = 100,
+                    verbose       = 0,
+                    n_iter        = 30,
                     cv            = GroupTimeSeriesSplit(n_folds=n_folds,
                                                          holdout_size=200, 
                                                          groups=train['time_id']))
 
+    
 
-
-
-bs.fit(train[features], train[target])
+bs.fit(train[features], train[target],  
+       callbacks=[early_stopping],
+       eval_set=[(train[features], train[target])], 
+       eval_metric=corr_eval)
 
 print('Saving results...')
-pickle.dump(bs,     open(f"lgbm_bayessearch_version{version}.pkl"    , "wb"))
+pickle.dump(bs.best_estimator_,     open(f"model_lgbm_bayessearch_version{version}.pkl"    , "wb"))
+pickle.dump(bs.cv_results_,         open(f"results_lgbm_bayessearch_version{version}.pkl"    , "wb"))
+pickle.dump(bs.best_params_,        open(f"params_lgbm_bayessearch_version{version}.pkl"    , "wb"))
+
+

@@ -4,7 +4,7 @@ import pickle
 import numpy.ma as ma
 from sklearn.metrics import make_scorer
 import sklearn
-from sklearn.model_selection import BayesSearchCV
+from skopt import BayesSearchCV
 import numpy         as np 
 from typing import Tuple 
 import tensorflow as tf
@@ -117,7 +117,7 @@ def build_model(
     
 
 search_spaces = dict(
-    batch_size    = [2**5],
+    batch_size    = [2**10],
     epochs        = [50],
     hidden_unit1  = Integer(200,1000),
     hidden_unit2  = Integer(200,1000),
@@ -142,14 +142,14 @@ early_stopping = tf.keras.callbacks.EarlyStopping(monitor='r2_score',
 
 
 
-print('Running grid search...')
+print('Running search...')
 bs = BayesSearchCV( estimator     = KerasRegressor(build_fn = build_model), 
                     fit_params    = {'callbacks': [early_stopping]},
                     search_spaces = search_spaces,
                     scoring       = scorer,
-                    n_jobs        = -1,
-                    verbose       = 1,
-                    n_iter        = 100,
+                    n_jobs        = 4,
+                    verbose       = 0,
+                    n_iter        = 2,
                     cv            = GroupTimeSeriesSplit(n_folds=n_folds,
                                                          holdout_size=200, 
                                                          groups=train['time_id']))
