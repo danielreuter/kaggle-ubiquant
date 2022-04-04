@@ -8,5 +8,4 @@
 
 3) Models were tuned based on performance in a 5-fold time-based cross-validation strategy, code is ubi_lgbm_tuning.py and ubi_nn_tuning.py
 
-4) Competition submission file is: https://www.kaggle.com/danielreuter/ubiquant-model-testing
 
